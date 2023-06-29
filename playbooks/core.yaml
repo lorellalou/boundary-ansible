@@ -1,0 +1,28 @@
+---
+
+- name: Full Boundary installation
+  hosts: boundary_controllers
+  become: true
+  become_user: root
+  vars:
+    packages:
+      - vim
+      - wget
+      - curl
+      - htop
+    db_name: boundary
+  tasks:
+    - name: Ensure a list of packages installed
+      ansible.builtin.dnf:
+        name: "{{ packages }}"
+        state: present
+    - name: All done
+      ansible.builtin.debug:
+        msg: Packages have been successfully installed
+
+- name: Disable IPV6
+  hosts: boundary_controllers
+  become: true
+  become_user: root
+  roles:
+    - ipv6

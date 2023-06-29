@@ -1,0 +1,19 @@
+---
+roles:
+  - galaxyproject.postgresql
+  - src: https://github.com/ansible-community/ansible-role-boundary
+    scm: git
+    version: v2.0.1
+    name: boundary
+  - src: https://github.com/juju4/ansible-ipv6.git
+    scm: git
+    version: 1.7.0
+    name: ipv6
+  - src: https://github.com/uoi-io/ansible-haproxy.git
+    scm: git
+    version: v1.5.6
+    name: haproxy  
+
+collections:
+  - community.postgresql
+  - community.general

@@ -1,0 +1,31 @@
+---
+
+- hosts: reverseproxy
+  become: true
+  become_user: root
+  roles:
+    - haproxy
+
+  vars:
+    # Frontend
+    haproxy_frontend:
+      - boundary_controller:
+          binds_ssl:
+            - :443 ssl crt /etc/ssl/uoi.io/uoi.io.pem no-sslv3
+          reqadds:
+            - X-Forwarded-Proto:\ https
+          default_backend: boundary_controller_backend
+          logs:
+            - 127.0.0.1 local0 debug
+          log_formats:
+            - "%ci:%cp [%tr] %ft %b/%s %TR/%Tw/%Tc/%Tr/%Ta %ST %B %CC %CS %tsc %ac/%fc/%bc/%sc/%rc %sq/%bq %hr %hs %{+Q}r"
+          capture:
+            - request header Host len 64
+            - request header X-Forwarded-For len 64
+    # Backend
+    haproxy_backend:
+      - boundary_controller_backend:
+          balance: source
+          default_server: "inter 2s downinter 5s rise 3 fall 2 slowstart 30s maxconn 30 maxqueue 64 weight 100"
+          servers:
+            - controller boundary.local:9200 check inter 2000 rise 2 fall 5

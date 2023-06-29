@@ -1,0 +1,36 @@
+---
+
+- name: Install Boundary
+  hosts: boundary_controllers,boundary_workers
+  become: true
+  become_user: root
+  vars:
+    boundary_version: '0.13.0'
+    boundary_home_directory: '/etc/boundary.d'
+    boundary_config_file: '{{ boundary_home_directory }}/worker.hcl'
+    boundary_server_file: '{{ boundary_home_directory }}/controller.hcl'
+    boundary_database:
+      url: 'postgres://boundary:boundary@127.0.0.1:5432/boundary?sslmode=disable' 
+    boundary_db_init_flags: '-skip-auth-method-creation -skip-host-resources-creation -skip-scopes-creation -skip-target-creation'
+    boundary_api_tls_cert_src_file: '{{ playbook_dir }}/../tls/client_cert.pem'
+    boundary_api_tls_key_src_file: '{{ playbook_dir }}/../tls/client_key.pem'
+    boundary_api_tls_ca_src_file: '{{ playbook_dir }}/../tls/ca_cert.pem'
+    boundary_cors_enabled: true
+    boundary_kms_type: 'aead'
+    boundary_worker_parameters:
+      public_addr: "rolaz.synology.me:9202"
+    boundary_kms:
+      root:
+        aead_type: 'aes-gcm'
+        key_id: 'global_root'
+        key: 'sP1fnF5Xz85RrXyELHFeZg9Ad2qt4Z4bgNHVGtD6ung='
+      worker-auth:
+        aead_type: 'aes-gcm'
+        key_id: 'worker-auth'
+        key: 'sP1fnF5Xz85RrXyELHFeZg9Ad2qt4Z4bgNHVGtD6ung='
+      recovery:
+        aead_type: 'aes-gcm'
+        key_id: 'recovery'
+        key: 'sP1fnF5Xz85RrXyELHFeZg9Ad2qt4Z4bgNHVGtD6ung='
+  roles:
+    - boundary

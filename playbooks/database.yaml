@@ -1,0 +1,75 @@
+---
+
+- name: Install Postgresql
+  hosts: databases
+  become: true
+  become_user: root
+  vars:
+    postgresql_version: 15
+    postgresql_conf:
+      - listen_addresses: "'*'"
+      - port: 5432
+      - max_connections: 50
+    postgresql_pg_hba_conf:
+      - host all all 10.0.0.0/8 md5
+  roles:
+    - galaxyproject.postgresql
+
+- name: Install Postgresql Contrib
+  hosts: databases
+  become: true
+  become_user: root
+  tasks:
+    - name: Ensure a list of packages installed
+      ansible.builtin.dnf:
+        name: postgresql15-contrib
+        state: present
+
+- name: Configure Boundary Database
+  hosts: databases
+  tasks:
+    - name: Create boundary DB
+      become: true
+      become_user: postgres
+      postgresql_db: 
+        name: boundary
+        state: present
+    - name: Ensure user has access to the new database
+      become: true
+      become_user: postgres
+      postgresql_user: 
+        db: boundary
+        name: boundary
+        password: boundary
+        priv: ALL
+        state: present
+    - name: Ensure user does not have unnecessary permissions
+      become: true
+      become_user: postgres
+      postgresql_user: 
+        name: boundary
+        role_attr_flags: NOSUPERUSER,NOCREATEDB
+        state: present
+    - name: GRANT ALL PRIVILEGES ON DATABASE boundary TO boundary
+      become: true
+      become_user: postgres
+      postgresql_privs:
+        db: boundary
+        privs: ALL
+        type: database
+        role: boundary
+    - name: GRANT ALL ON SCHEMA public TO boundary
+      become: true
+      become_user: postgres    
+      postgresql_privs:
+        db: boundary
+        privs: ALL
+        roles: boundary
+        objs: ALL_IN_SCHEMA
+        schema: public
+    - name: Install extension pgcrypto
+      become: true
+      become_user: postgres 
+      postgresql_ext:
+        name: pgcrypto
+        db: boundary
