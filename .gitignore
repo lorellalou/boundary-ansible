@@ -1,0 +1,8 @@
+hosts
+terraform/boundary/.terraform.lock.hcl
+terraform/boundary/terraform.tfstate
+terraform/boundary/terraform.tfstate.backup
+terraform/boundary/terraform.tfvars
+tls/ca_cert.pem
+tls/client_cert.pem
+tls/client_key.pem
