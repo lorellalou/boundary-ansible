@@ -42,19 +42,34 @@ resource "boundary_auth_method_password" "corp_password" {
     scope_id                 = boundary_scope.corp.id
 }
 
-resource "boundary_user" "users" {
-  for_each    = boundary_account_password.accounts
-  name        = each.value.name
-  description = "User resource for ${each.key}"
-  scope_id    = boundary_scope.corp.id
-  account_ids = [each.value.id]
+resource "boundary_auth_method_oidc" "corp_oidc" {
+    scope_id                 = boundary_scope.corp.id
+    issuer                   = var.oidc_issuer
+    client_id                = var.oidc_client
+    client_secret            = var.oidc_secret
+    api_url_prefix           = var.api_url_prefix
+    signing_algorithms       = ["RS256"]
+    claims_scopes            = ["profile", "boundary_roles", "boundary_context"]  
 }
 
-resource "boundary_account_password" "accounts" {
-  for_each       = var.users
-  auth_method_id = boundary_auth_method_password.corp_password.id
-  login_name     = each.key
-  password       = "Pass3ord"
+resource "boundary_managed_group" "admin_internal" {
+  auth_method_id             = boundary_auth_method_oidc.corp_oidc.id
+  filter                     = "\"CorpAdmin\" in \"/token/boundary_roles\" and \"/token/boundary_context\" == \"Internal\" and \"/token/name\" == \"lorellalou\""
+}
+
+resource "boundary_account_oidc" "lorellalou" {
+  name           = "lorellalou"
+  description    = "Laurent ROLAZ"
+  auth_method_id = boundary_auth_method_oidc.corp_oidc.id
+  issuer         = "https://dev-xz118zjh1qebvv1i.eu.auth0.com/"
+  subject        = "auth0|64b94cd70b7eb7c57971eb08"
+}
+
+resource "boundary_user" "lorellalou" {
+  name        = "lorellalou"
+  description = "Laurent ROLAZ"
+  scope_id    = boundary_scope.corp.id
+  account_ids = [boundary_account_oidc.lorellalou.id]
 }
 
 // add org-level role for administration access
@@ -62,11 +77,9 @@ resource "boundary_role" "organization_admin" {
   name        = "admin"
   description = "Administrator role"
   principal_ids = concat(
-    [for user in boundary_user.users: user.id]
+    [boundary_user.admin.id]
   )
   grant_strings   = [
-    "id=${boundary_target.backend_servers_rdp.id};type=target;actions=authorize-session",
-    "id=${boundary_target.boundary_appliance.id};type=target;actions=authorize-session",
     "id=*;type=*;actions=*"
     ]
   scope_id = boundary_scope.corp.id
@@ -76,8 +89,8 @@ resource "boundary_role" "core_infra_admin" {
   name        = "admin"
   description = "Administrator role"
   principal_ids = concat(
-    [for user in boundary_user.users: user.id],
-    [boundary_user.admin.id]
+    [boundary_user.admin.id],
+    [boundary_managed_group.admin_internal.id]
   )
   grant_strings   = [
     "id=${boundary_target.backend_servers_rdp.id};type=target;actions=authorize-session",
