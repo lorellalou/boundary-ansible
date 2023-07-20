@@ -13,7 +13,16 @@ roles:
     scm: git
     version: v1.5.6
     name: haproxy  
+  - src: https://github.com/ansible-community/ansible-vault.git
+    name: vault
+    scm: git
+    version: v2.5.8
+  - src: https://github.com/gametize/ansible-role-install-root-cert.git
+    scm: git
+    version: 1.0.2
+    name: install-root-cert
 
 collections:
   - community.postgresql
   - community.general
+  - middleware_automation.keycloak

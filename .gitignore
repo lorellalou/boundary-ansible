@@ -6,3 +6,4 @@ terraform/boundary/terraform.tfvars
 tls/ca_cert.pem
 tls/client_cert.pem
 tls/client_key.pem
+.DS_Store

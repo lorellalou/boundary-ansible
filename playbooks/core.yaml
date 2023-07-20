@@ -10,6 +10,7 @@
       - wget
       - curl
       - htop
+      - java-1.8.0-openjdk-headless
     db_name: boundary
   tasks:
     - name: Ensure a list of packages installed
@@ -26,3 +27,12 @@
   become_user: root
   roles:
     - ipv6
+
+- name: Install Root Cert
+  hosts: boundary_controllers
+  become: true
+  become_user: root
+  vars:
+    install_root_cert_pem: ../files/mkcert-root.pem
+  roles:
+    - install-root-cert

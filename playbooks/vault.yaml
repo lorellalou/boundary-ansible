@@ -1,0 +1,14 @@
+---
+
+- name: Install Vault
+  hosts: vault
+  become: true
+  become_user: root
+  vars:
+    vault_version: '1.14.0'
+    vault_backend: file
+    vault_tls_disable: false
+    vault_plugins_enable: [ 'acme', 'example' ]
+   
+  roles:
+    - vault
